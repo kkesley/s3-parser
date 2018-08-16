@@ -9,17 +9,24 @@ import (
 )
 
 //PutS3DocumentDefault put byte array to s3 bucket
-func PutS3DocumentDefault(region string, bucket string, key string, content []byte) error {
+func PutS3DocumentDefault(input PutS3DocumentDefaultInput) error {
 	sess := session.Must(
 		session.NewSession(&aws.Config{
-			Region: aws.String(region),
+			Region: aws.String(input.Region),
 		}),
 	)
 	svc := s3.New(sess)
-	_, err := svc.PutObject(&s3.PutObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-		Body:   bytes.NewReader(content),
-	})
+	inputs3 := &s3.PutObjectInput{
+		Bucket: aws.String(input.Bucket),
+		Key:    aws.String(input.Key),
+		Body:   bytes.NewReader(input.Content),
+	}
+	if len(input.ACL) > 0 {
+		inputs3.ACL = aws.String(input.ACL)
+	}
+	if len(input.ContentType) > 0 {
+		inputs3.ContentType = aws.String(input.ContentType)
+	}
+	_, err := svc.PutObject(inputs3)
 	return err
 }
